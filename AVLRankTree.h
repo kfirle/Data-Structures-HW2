@@ -152,6 +152,16 @@ private:
         }
     }
 
+    AVLNode* findByRank(int index, AVLNode* root){
+        if (root== nullptr) return nullptr;
+        if (root->leftSon != nullptr){
+            if (root->leftSon->subTreeSize == index-1) return root;
+            else if (root->leftSon->subTreeSize > index-1) return findByRank(index,root->leftSon);
+            else return findByRank(index-root->leftSon->subTreeSize-1,root->rightSon);
+        }
+        if (index==1) return root;
+    }
+
     void roll (AVLNode* startNode){
         AVLNode* current=startNode;
         int leftSonHeight,rightSonHeight,leftSonRightSonHeight,leftSonLeftSonHeight,
@@ -420,7 +430,7 @@ public:
     };
     */
 
-    const AVLNode* getRoot() const{
+    AVLNode* getRoot() {
         return root;
     }
 
@@ -591,6 +601,10 @@ public:
             else current=current->leftSon;
         }
         throw NotFound_AVLtree();
+    }
+
+    AVLNode* select (int index){
+        return findByRank(index,root);
     }
 
     void printTree (){

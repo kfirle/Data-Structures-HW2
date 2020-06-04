@@ -15,25 +15,28 @@ class MusicManager{
 
     // ---------- Subclasses ---------- //
 
-    class SongKey;
-    class ArtistKey;
+    class RankTreeSongKey;
+    class ArtistSongsTreeByIdAndPlaysSongKey;
+    class ArtistSongsTreeByIdAndPlaysSongData;
+    class ArtistSongsTreeByIdSongData;
     class ArtistData;
-    class PlaysData;
 
-    class SongKey{
+    // key for the songs in the songsRankTree
+    class RankTreeSongKey{
         int songID;
         int songNumberOfPlays;
         int artistID;
 
     public:
 
-        SongKey()= delete;
-        SongKey(SongKey &songKey) = default;
-        SongKey(int songID,int songNumberOfPlays);
-        ~SongKey()= default;
+        RankTreeSongKey()= delete;
+        RankTreeSongKey(RankTreeSongKey &songKey) = default;
+        RankTreeSongKey(int songID,int songNumberOfPlays,int artistID);
+        ~RankTreeSongKey()= default;
         int getSongID() const;
         int getSongNumberOfPlays() const;
-        friend bool operator>(const SongKey &songKey1, const SongKey &songKey2){
+        int getSongArtistID() const;
+        friend bool operator>(const RankTreeSongKey &songKey1, const RankTreeSongKey &songKey2){
             if (songKey1.songNumberOfPlays>songKey2.songNumberOfPlays){
                 return true;
             }
@@ -48,7 +51,7 @@ class MusicManager{
             }
             return songKey1.songID<songKey2.songID;
         };
-        friend bool operator<(const SongKey &songKey1, const SongKey &songKey2){
+        friend bool operator<(const RankTreeSongKey &songKey1, const RankTreeSongKey &songKey2){
             if (songKey1.songNumberOfPlays<songKey2.songNumberOfPlays){
                 return true;
             }
@@ -63,7 +66,7 @@ class MusicManager{
             }
             return songKey1.songID>songKey2.songID;
         };
-        friend bool operator==(SongKey &songKey1,SongKey &songKey2){
+        friend bool operator==(RankTreeSongKey &songKey1,RankTreeSongKey &songKey2){
             if (songKey1.songNumberOfPlays!=songKey2.songNumberOfPlays)
                 return false;
             if (songKey1.artistID!=songKey2.artistID)
@@ -72,58 +75,79 @@ class MusicManager{
         };
     };
 
-    class ArtistKey{
-        int artistID;
+    // key for the songs in the songs tree that is sorted by the number of plays and than by the id
+    class ArtistSongsTreeByIdAndPlaysSongKey{
+        int songID;
+        int songNumberOfPlays;
 
     public:
 
-        ArtistKey()= delete;
-        ArtistKey(ArtistKey &artistKey)= default;
-        explicit ArtistKey(int artistID);
-        ~ArtistKey()= default;
-        int getArtistID() const;
-        friend bool operator>(const ArtistKey &artistKey1, const ArtistKey &artistKey2){
-            return artistKey1.artistID<artistKey2.artistID;
+        ArtistSongsTreeByIdAndPlaysSongKey()= delete;
+        ArtistSongsTreeByIdAndPlaysSongKey(ArtistSongsTreeByIdAndPlaysSongKey &songKey) = default;
+        ArtistSongsTreeByIdAndPlaysSongKey(int songID,int songNumberOfPlays);
+        ~ArtistSongsTreeByIdAndPlaysSongKey()= default;
+        int getSongID() const;
+        int getSongNumberOfPlays() const;
+        friend bool operator>(const ArtistSongsTreeByIdAndPlaysSongKey &songKey1, const ArtistSongsTreeByIdAndPlaysSongKey &songKey2){
+            if (songKey1.songNumberOfPlays>songKey2.songNumberOfPlays) return true;
+            if (songKey1.songNumberOfPlays<songKey2.songNumberOfPlays) return false;
+            else return songKey1.songID<songKey2.songID;
         };
-        friend bool operator<(const ArtistKey &artistKey1, const ArtistKey &artistKey2){
-            return artistKey1.artistID>artistKey2.artistID;
+        friend bool operator<(const ArtistSongsTreeByIdAndPlaysSongKey &songKey1, const ArtistSongsTreeByIdAndPlaysSongKey &songKey2){
+            if (songKey1.songNumberOfPlays<songKey2.songNumberOfPlays) return true;
+            if (songKey1.songNumberOfPlays>songKey2.songNumberOfPlays) return false;
+            else return songKey1.songID>songKey2.songID;
         };
-        friend bool operator==(ArtistKey &artistKey1, ArtistKey &artistKey2){
-            return artistKey1.artistID==artistKey2.artistID;
+        friend bool operator==(ArtistSongsTreeByIdAndPlaysSongKey &songKey1,ArtistSongsTreeByIdAndPlaysSongKey &songKey2){
+            if (songKey1.songNumberOfPlays!=songKey2.songNumberOfPlays)
+                return false;
+            else return songKey1.songID==songKey2.songID;
         };
     };
 
-    class PlaysData{
-        AVLtree<SongKey,int>::AVLNode* songInArtistTree;
+    // data for the songs in the songs tree that is sorted by the number of plays and than by the id
+    class ArtistSongsTreeByIdAndPlaysSongData{
+        AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode* songInSongsByIdTree;
 
-    public:
-
-        PlaysData();
-        PlaysData(PlaysData &playsData);
-        ~PlaysData();
+        public:
+        ArtistSongsTreeByIdAndPlaysSongData() = delete;
+        ArtistSongsTreeByIdAndPlaysSongData(ArtistSongsTreeByIdAndPlaysSongData &songData) = default;
+        explicit ArtistSongsTreeByIdAndPlaysSongData(AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode* songInSongsByIdTree);
+        AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode *getSongInSongsByIdTree();
+        void setSongInSongsByIdTree(AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode &songInSongsByIdTree);
     };
 
+    // data for the songs in the songs tree that is sorted by the id
+    class ArtistSongsTreeByIdSongData{
+        AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* songInSongsByIdAndPlaysTree;
+
+        public:
+        ArtistSongsTreeByIdSongData() = delete;
+        ArtistSongsTreeByIdSongData(ArtistSongsTreeByIdSongData &songData) = default;
+        explicit ArtistSongsTreeByIdSongData(AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* songInSongsByIdAndPlaysTree);
+        AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode *getSongInSongsByIdAndPlaysTree();
+        void setSongInSongsByIdTree(AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode &songInSongsByIdAndPlaysTree);
+    };
+
+    // data for the artists in the chains in the hash table
     class ArtistData{
-        AVLtree<SongKey,int>* songs_ordered_by_id;
-        AVLtree<SongKey,int>* songs_ordered_by_plays;
-        AVLRankTree<SongKey,int>::AVLNode* maxPlaysSong;
+        AVLtree<int, ArtistSongsTreeByIdSongData>* songs_ordered_by_id;
+        AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>* songs_ordered_by_plays_and_id;
+        AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* maxSong;
 
     public:
 
-        ArtistData()= delete;
+        ArtistData();
         ArtistData(ArtistData &artistData);
-        explicit ArtistData(int numberOfSongs);
         ~ArtistData();
-        AVLtree<SongKey,int>* &getSongs();
-        AVLtree<SongKey,int>::AVLNode** &getSongNodes();
-        List<int,PlaysData>::ListNode** &getPlaysNodes();
-        AVLRankTree<SongKey,int>::AVLNode* getMaxSongPlays() const;
-        void setMaxSongPlays(AVLRankTree<SongKey,int>::AVLNode* newMaxPlaysSong);
+        AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* getMaxSong();
+        AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>* getSongsTreeOrderedByPlaysAndId();
+        AVLtree<int, ArtistSongsTreeByIdSongData>* getSongsTreeOrderedById();
     };
 
     // ---------- Properties ---------- //
-    AVLRankTree<SongKey,ArtistData>* songs;
-    List<ArtistKey,ArtistData>* artists;
+    AVLRankTree<RankTreeSongKey,int>* songs; // actually there is no need for data in the songs rank tree, right?
+    List<int,ArtistData>* artists;
     int artistsCounter;
     int size;
 

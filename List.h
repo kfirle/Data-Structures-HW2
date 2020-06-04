@@ -181,6 +181,13 @@ class List {
         delete element;
     }
 
+    ListNode& removeFirst(){
+        ListNode* first = this->getFirst();
+        first->getNext()->previous = nullptr;
+        first->next = nullptr;
+        return first;
+    }
+
     void printList(){
         cout << "song plays printing:" << endl;
         ListNode *i = first;

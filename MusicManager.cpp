@@ -6,142 +6,94 @@
 #define INITIAL_ARRAY_SIZE 10
 #include "MusicManager.h"
 
-// ---------- SongKey implementation ---------- //
+// ---------- RankTreeSongKey implementation ---------- //
 
-MusicManager::SongKey::SongKey(int songID, int songNumberOfPlays): songID(songID),songNumberOfPlays(songNumberOfPlays){}
+MusicManager::RankTreeSongKey::RankTreeSongKey(int songID, int songNumberOfPlays, int artistID): songID(songID),songNumberOfPlays(songNumberOfPlays),
+artistID(artistID){}
 
-int MusicManager::SongKey::getSongID() const {
+int MusicManager::RankTreeSongKey::getSongID() const {
     return songID;
 }
 
-int MusicManager::SongKey::getSongNumberOfPlays() const {
+int MusicManager::RankTreeSongKey::getSongNumberOfPlays() const {
     return songNumberOfPlays;
 }
 
-// ---------- ArtistKey implementation ---------- //
-
-MusicManager::ArtistKey::ArtistKey(int artistID): artistID(artistID) {}
-
-int MusicManager::ArtistKey::getArtistID() const {
+int MusicManager::RankTreeSongKey::getSongArtistID() const {
     return artistID;
+}
+
+// ---------- ArtistSongsTreeSongKey implementation ---------- //
+
+MusicManager::ArtistSongsTreeByIdAndPlaysSongKey::ArtistSongsTreeByIdAndPlaysSongKey(int songID, int songNumberOfPlays): songID(songID),songNumberOfPlays(songNumberOfPlays){}
+
+int MusicManager::ArtistSongsTreeByIdAndPlaysSongKey::getSongID() const {
+    return songID;
+}
+
+int MusicManager::ArtistSongsTreeByIdAndPlaysSongKey::getSongNumberOfPlays() const {
+    return songNumberOfPlays;
+}
+
+// ---------- ArtistSongsTreeByIdAndPlaysSongData implementation ---------- //
+
+MusicManager::ArtistSongsTreeByIdAndPlaysSongData::ArtistSongsTreeByIdAndPlaysSongData(AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode* songInSongsByIdTree) {
+    this->songInSongsByIdTree = songInSongsByIdTree;
+}
+
+AVLtree<int,MusicManager::ArtistSongsTreeByIdSongData>::AVLNode* MusicManager::ArtistSongsTreeByIdAndPlaysSongData::getSongInSongsByIdTree() {
+    return songInSongsByIdTree;
+}
+
+void MusicManager::ArtistSongsTreeByIdAndPlaysSongData::setSongInSongsByIdTree(
+        AVLtree<int, MusicManager::ArtistSongsTreeByIdSongData>::AVLNode &songInSongsByIdTree) {
+    this->songInSongsByIdTree = &songInSongsByIdTree;
+}
+
+// ---------- ArtistSongsTreeByIdSongData implementation ---------- //
+
+MusicManager::ArtistSongsTreeByIdSongData::ArtistSongsTreeByIdSongData(
+        AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey, MusicManager::ArtistSongsTreeByIdAndPlaysSongData>::AVLNode *songInSongsByIdAndPlaysTree) {
+    this->songInSongsByIdAndPlaysTree = songInSongsByIdAndPlaysTree;
+}
+
+AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey,MusicManager::ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* MusicManager::ArtistSongsTreeByIdSongData::getSongInSongsByIdAndPlaysTree() {
+    return songInSongsByIdAndPlaysTree;
+}
+
+void MusicManager::ArtistSongsTreeByIdSongData::setSongInSongsByIdTree(
+        AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey, MusicManager::ArtistSongsTreeByIdAndPlaysSongData>::AVLNode &songInSongsByIdAndPlaysTree) {
+    this->songInSongsByIdAndPlaysTree = &songInSongsByIdAndPlaysTree;
 }
 
 // ---------- ArtistData implementation ---------- //
 
-MusicManager::ArtistData::ArtistData(int numberOfSongs){
-    this->numberOfSongs = numberOfSongs;
-    zeroPlaysSongCounter = numberOfSongs;
-    maxSongID = 0;
-    maxSongPlays = 0;
-    currentMaxNotCheckedSong = 0;
-    songs = new AVLtree<SongKey,int>();
-    songNodes = new AVLtree<SongKey,int>::AVLNode*[numberOfSongs];
-    playsNodes = new List<int,PlaysData>::ListNode*[numberOfSongs];
-    zeroPlays = new int*[numberOfSongs+1];
-    for (int i = 0; i < numberOfSongs+1; ++i) {
-        if (i < numberOfSongs){
-            songNodes[i]= nullptr;
-            playsNodes[i]= nullptr;
-        }
-        zeroPlays[i] = new int[2];
-        if (i==0) zeroPlays[i][0]= INVALID_INDEX;
-        else zeroPlays[i][0]=i-1;
-        if (i==numberOfSongs) zeroPlays[i][1]= INVALID_INDEX;
-        else zeroPlays[i][1]=i+1;
-    }
-}
-
-MusicManager::ArtistData::~ArtistData() {
-    delete[] songNodes;
-    delete[] playsNodes;
-    for (int i = 0; i < numberOfSongs+1; ++i) {
-        delete[] zeroPlays[i];
-    }
-    delete[] zeroPlays;
-    delete songs;
+MusicManager::ArtistData::ArtistData() {
+    songs_ordered_by_id = new AVLtree<int,MusicManager::ArtistSongsTreeByIdSongData>();
+    songs_ordered_by_plays_and_id = new AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>();
+    maxSong = nullptr;
 }
 
 MusicManager::ArtistData::ArtistData(MusicManager::ArtistData &artistData) {
-    numberOfSongs = artistData.numberOfSongs;
-    zeroPlaysSongCounter = artistData.zeroPlaysSongCounter;
-    maxSongID = artistData.maxSongID;
-    maxSongPlays = artistData.maxSongPlays;
-    currentMaxNotCheckedSong = artistData.currentMaxNotCheckedSong;
-    songs = new AVLtree<SongKey,int>(); // this is because we will always copy an ArtistData object with an empty tree
-    songNodes = new AVLtree<SongKey,int>::AVLNode*[artistData.numberOfSongs];
-    playsNodes = new List<int,PlaysData>::ListNode*[artistData.numberOfSongs];
-    zeroPlays = new int*[artistData.numberOfSongs+1];
-    for (int i = 0; i < artistData.numberOfSongs+1; ++i) {
-        if (i < numberOfSongs){
-            songNodes[i]= artistData.songNodes[i];
-            playsNodes[i]= artistData.playsNodes[i];
-        }
-        zeroPlays[i] = new int[2];
-        zeroPlays[i][0] = artistData.zeroPlays[i][0];
-        zeroPlays[i][1] = artistData.zeroPlays[i][1];
-    }
+    // we need to make an AVLtree copy constructor if we really want to do this
 }
 
-AVLtree<MusicManager::SongKey,int>* &MusicManager::ArtistData::getSongs() {
-    return songs;
+MusicManager::ArtistData::~ArtistData() {
+    delete songs_ordered_by_plays_and_id;
+    delete songs_ordered_by_id;
 }
 
-AVLtree<MusicManager::SongKey,int>::AVLNode** &MusicManager::ArtistData::getSongNodes() {
-    return songNodes;
+AVLtree<int, MusicManager::ArtistSongsTreeByIdSongData>* MusicManager::ArtistData::getSongsTreeOrderedById() {
+    return songs_ordered_by_id;
 }
 
-List<int,MusicManager::PlaysData>::ListNode** &MusicManager::ArtistData::getPlaysNodes(){
-    return playsNodes;
+AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey,MusicManager::ArtistSongsTreeByIdAndPlaysSongData>* MusicManager::ArtistData::getSongsTreeOrderedByPlaysAndId() {
+    return songs_ordered_by_plays_and_id;
 }
 
-int MusicManager::ArtistData::getNumberOfSongs() {
-    return numberOfSongs;
+AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey,MusicManager::ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* MusicManager::ArtistData::getMaxSong() {
+    return maxSong;
 }
-
-int MusicManager::ArtistData::getZeroPlaysSongCounter() {
-    return zeroPlaysSongCounter;
-}
-
-void MusicManager::ArtistData::setZeroPlaysSongCounter(int zeroPlaysSongs) {
-    zeroPlaysSongCounter = zeroPlaysSongs;
-}
-
-int** &MusicManager::ArtistData::getZeroPlays(){
-    return zeroPlays;
-}
-
-int MusicManager::ArtistData::getMaxSongID() {
-    return maxSongID;
-}
-
-int MusicManager::ArtistData::getMaxSongPlays() const {
-    return maxSongPlays;
-}
-
-void MusicManager::ArtistData::setMaxSongID(int maxSongID) {
-    this->maxSongID=maxSongID;
-}
-
-void MusicManager::ArtistData::setMaxSongPlays(AVLRankTree<SongKey,int>::AVLNode* newMaxPlaysSong) {
-    this->maxPlaysSong = newMaxPlaysSong;
-}
-
-// ---------- PlaysData implementation ---------- //
-
-MusicManager::PlaysData::PlaysData() {
-    minID = nullptr;
-    artistsTree = new AVLtree<ArtistKey,AVLtree<ArtistKey,ArtistData>::AVLNode*>();
-}
-
-MusicManager::PlaysData::~PlaysData() {
-    delete artistsTree;
-}
-
-MusicManager::PlaysData::PlaysData(MusicManager::PlaysData &playsData) {
-    minID = playsData.minID;
-    artistsTree = new AVLtree<ArtistKey,AVLtree<ArtistKey,ArtistData>::AVLNode*>();
-}
-
 
 // ---------- MusicManager implementation - private ---------- //
 
@@ -151,9 +103,9 @@ int MusicManager::hashFunction(int id,int modulo) {
 
 void MusicManager::extendArtistsArraySize(){
     int newSize = this->size * 10;
-    List<ArtistKey,ArtistData>* newArtists = new List<ArtistKey,ArtistData>[newSize];
+    List<int,ArtistData>* newArtists = new List<int,ArtistData>[newSize];
     for(int i=0; i < this->size; i++){
-        List<ArtistKey,ArtistData>::ListNode* current = artists[i].getFirst();
+        List<int,ArtistData>::ListNode* current = artists[i].getFirst();
         while(current != nullptr){
             int
         }
@@ -163,8 +115,8 @@ void MusicManager::extendArtistsArraySize(){
 // ---------- MusicManager implementation - public ---------- //
 
 MusicManager::MusicManager() {
-    songs = new AVLRankTree<SongKey,ArtistData>();
-    artists = new List<ArtistKey,ArtistData>[INITIAL_ARRAY_SIZE];
+    songs = new AVLRankTree<RankTreeSongKey,int>();
+    artists = new List<int,ArtistData>[INITIAL_ARRAY_SIZE];
     artistsCounter = 0;
     size = INITIAL_ARRAY_SIZE;
 }
