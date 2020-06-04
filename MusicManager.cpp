@@ -145,6 +145,20 @@ MusicManager::PlaysData::PlaysData(MusicManager::PlaysData &playsData) {
 
 // ---------- MusicManager implementation - private ---------- //
 
+int MusicManager::hashFunction(int id,int modulo) {
+    return id % modulo;
+}
+
+void MusicManager::extendArtistsArraySize(){
+    int newSize = this->size * 10;
+    List<ArtistKey,ArtistData>* newArtists = new List<ArtistKey,ArtistData>[newSize];
+    for(int i=0; i < this->size; i++){
+        List<ArtistKey,ArtistData>::ListNode* current = artists[i].getFirst();
+        while(current != nullptr){
+            int
+        }
+    }
+}
 
 // ---------- MusicManager implementation - public ---------- //
 

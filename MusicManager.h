@@ -129,8 +129,8 @@ class MusicManager{
 
     // ---------- private functions ---------- //
 
+    int hashFunction(int id, int modulo);
     void extendArtistsArraySize();
-    int hashFunction(int id);
 
     // ---------- public functions ---------- //
 
