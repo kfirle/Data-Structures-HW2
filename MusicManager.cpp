@@ -263,6 +263,10 @@ StatusType MusicManager::AddToSongCount(int artistID, int songID, int count) {
     songByIdAndPlaysNode = artist->getData().getSongsTreeOrderedByPlaysAndId()->insert(newSongByIdAndPlaysKey,newSongByIdAndPlaysData);
     songByIdNode->getData().setSongInSongsByIdTree(*songByIdAndPlaysNode);
     songByIdAndPlaysNode->getData().setSongInSongsByIdTree(*songByIdNode);
+    if (artist->getData().getMaxSong()->getKey().getSongNumberOfPlays()<songByIdAndPlaysNode->getKey().getSongNumberOfPlays()
+        || (artist->getData().getMaxSong()->getKey().getSongNumberOfPlays()==songByIdAndPlaysNode->getKey().getSongNumberOfPlays()
+            && artist->getData().getMaxSong()->getKey().getSongID()>songByIdAndPlaysNode->getKey().getSongID()))
+        artist->getData().setMaxSong(*songByIdAndPlaysNode);
     // removing the old song node with the old number of plays and inserting the new one (in the songs rank tree)
     RankTreeSongKey songRankTreeKey(songID,songNumberOfPlays,artistID);
     RankTreeSongKey newSongRankTreeKey(songID,songNumberOfPlays+count,artistID);
