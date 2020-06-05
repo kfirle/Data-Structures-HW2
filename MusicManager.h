@@ -110,7 +110,7 @@ class MusicManager{
         AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode* songInSongsByIdTree;
 
         public:
-        ArtistSongsTreeByIdAndPlaysSongData() = delete;
+        ArtistSongsTreeByIdAndPlaysSongData();
         ArtistSongsTreeByIdAndPlaysSongData(ArtistSongsTreeByIdAndPlaysSongData &songData) = default;
         explicit ArtistSongsTreeByIdAndPlaysSongData(AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode* songInSongsByIdTree);
         AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode *getSongInSongsByIdTree();
@@ -122,7 +122,8 @@ class MusicManager{
         AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* songInSongsByIdAndPlaysTree;
 
         public:
-        ArtistSongsTreeByIdSongData() = delete;
+
+        ArtistSongsTreeByIdSongData();
         ArtistSongsTreeByIdSongData(ArtistSongsTreeByIdSongData &songData) = default;
         explicit ArtistSongsTreeByIdSongData(AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* songInSongsByIdAndPlaysTree);
         AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode *getSongInSongsByIdAndPlaysTree();
@@ -141,13 +142,13 @@ class MusicManager{
         ArtistData(ArtistData &artistData);
         ~ArtistData();
         AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* getMaxSong();
+        void setMaxSong(AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode &maxSong);
         AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>* getSongsTreeOrderedByPlaysAndId();
         AVLtree<int, ArtistSongsTreeByIdSongData>* getSongsTreeOrderedById();
     };
 
     // ---------- Properties ---------- //
-    AVLRankTree<RankTreeSongKey,int>* songs; // actually there is no need for data in the songs rank tree, right?
-                        // we should save a pointer to the vertex of the song in one of the song trees in artist object
+    AVLRankTree<RankTreeSongKey,int>* songs;
     List<int,ArtistData>* artists;
     int artistsCounter;
     int size;
