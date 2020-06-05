@@ -4,12 +4,13 @@
 
 #define INVALID_INDEX -1
 #define INITIAL_ARRAY_SIZE 10
+#define SHRINK_PROPORTION 20
 #include "MusicManager.h"
 
 // ---------- RankTreeSongKey implementation ---------- //
 
-MusicManager::RankTreeSongKey::RankTreeSongKey(int songID, int songNumberOfPlays, int artistID): songID(songID),songNumberOfPlays(songNumberOfPlays),
-artistID(artistID){}
+MusicManager::RankTreeSongKey::RankTreeSongKey(int songID, int songNumberOfPlays, int artistID):
+        songID(songID),songNumberOfPlays(songNumberOfPlays),artistID(artistID){}
 
 int MusicManager::RankTreeSongKey::getSongID() const {
     return songID;
@@ -25,7 +26,8 @@ int MusicManager::RankTreeSongKey::getSongArtistID() const {
 
 // ---------- ArtistSongsTreeSongKey implementation ---------- //
 
-MusicManager::ArtistSongsTreeByIdAndPlaysSongKey::ArtistSongsTreeByIdAndPlaysSongKey(int songID, int songNumberOfPlays): songID(songID),songNumberOfPlays(songNumberOfPlays){}
+MusicManager::ArtistSongsTreeByIdAndPlaysSongKey::ArtistSongsTreeByIdAndPlaysSongKey(int songID, int songNumberOfPlays):
+        songID(songID),songNumberOfPlays(songNumberOfPlays){}
 
 int MusicManager::ArtistSongsTreeByIdAndPlaysSongKey::getSongID() const {
     return songID;
@@ -75,7 +77,9 @@ MusicManager::ArtistData::ArtistData() {
 }
 
 MusicManager::ArtistData::ArtistData(MusicManager::ArtistData &artistData) {
-    // we need to make an AVLtree copy constructor if we really want to do this
+    this->maxSong = artistData.maxSong;
+    this->songs_ordered_by_id = new AVLtree<int,MusicManager::ArtistSongsTreeByIdSongData>();
+    this.songs_ordered_by_plays_and_id = new AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>();
 }
 
 MusicManager::ArtistData::~ArtistData() {
@@ -107,9 +111,34 @@ void MusicManager::extendArtistsArraySize(){
     for(int i=0; i < this->size; i++){
         List<int,ArtistData>::ListNode* current = artists[i].getFirst();
         while(current != nullptr){
-            int
+            List<int,ArtistData>::ListNode* next = current->getNext();
+            this->artists->removeFromList(current);
+            int hashResult = hashFunction(current->getKey(),newSize);
+            newArtists[hashResult].insertFirst(current);
+            current = next;
         }
     }
+    this->size = newSize;
+    delete[] this->artists;
+    this->artists = newArtists;
+}
+
+void MusicManager::shrinkArtistsArraySize(){
+    int newSize = this->size / 10;
+    List<int,ArtistData>* newArtists = new List<int,ArtistData>[newSize];
+    for(int i=0; i < this->size; i++){
+        List<int,ArtistData>::ListNode* current = artists[i].getFirst();
+        while(current != nullptr){
+            List<int,ArtistData>::ListNode* next = current->getNext();
+            this->artists->removeFromList(current);
+            int hashResult = hashFunction(current->getKey(),newSize);
+            newArtists[hashResult].insertFirst(current);
+            current = next;
+        }
+    }
+    this->size = newSize;
+    delete[] this->artists;
+    this->artists = newArtists;
 }
 
 // ---------- MusicManager implementation - public ---------- //
@@ -126,103 +155,40 @@ MusicManager::~MusicManager() {
     delete songs;
 }
 
-StatusType MusicManager::addArtist(int artistID, int numOfSongs) {
-    AVLtree<ArtistKey,AVLtree<ArtistKey,ArtistData>::AVLNode*>::AVLNode* artistSave = nullptr;
-    MusicManager::ArtistKey artistKey(artistID);
-    MusicManager::ArtistData artistData(numOfSongs);
-    AVLtree<ArtistKey,ArtistData>::AVLNode* artist = nullptr;
-    try {
-        artist = artists->insert(artistKey,artistData);
-    }
-    catch (AVLtree<ArtistKey,ArtistData>::AlreadyExist_AVLtree &alreadyExistAvLtree){
+StatusType MusicManager::addArtist(int artistID) {
+    MusicManager::ArtistData artistData;
+    int hashResult = hashFunction(artistID,this->size);
+    if(this->artists[hashResult].checkIfExist(artistID)){
         return FAILURE;
+        //Because there is an artist with the same ID in the system
     }
-
-    MusicManager::PlaysData newPlaysData;
-    int zeroPlayNodeKey=0;
-    if (songPlays->getFirst()== nullptr || songPlays->getFirst()->getKey()!= 0){
-        songPlays->insertFirst(zeroPlayNodeKey,newPlaysData);
-        artistSave = songPlays->getFirst()->getData().getArtistTree()->insert(artistKey,artist);
-        songPlays->getFirst()->getData().setMinID(artistSave);
-    } else {
-        artistSave = songPlays->getFirst()->getData().getArtistTree()->insert(artistKey,artist);
-        if (artist->getKey()>songPlays->getFirst()->getData().getMinID()->getKey()){
-            songPlays->getFirst()->getData().setMinID(artistSave);
-        }
+    this->artists[hashResult].insertFirst(artistID, artistData);
+    this->artistsCounter++;
+    if(this->size == this->artistsCounter){
+        this->extendArtistsArraySize();
     }
-
-    for (int i = 0; i < numOfSongs; ++i) {
-        artist->getData().getPlaysNodes()[i]=songPlays->getFirst();
-    }
-
-    songsCounter+=numOfSongs;
-
     return SUCCESS;
 }
 
 StatusType MusicManager::removeArtist(int artistID){
-    int songCounter=0;
-    // get the key
-    MusicManager::ArtistKey artistKey(artistID);
-
-    // get the artist node
-    AVLtree<ArtistKey,ArtistData>::AVLNode* artist;
-    AVLtree<ArtistKey,AVLtree<ArtistKey,ArtistData>::AVLNode*>::AVLNode* previousArtistSave = nullptr;
+    int hashResult = hashFunction(artistID,this->size);
+    List<int,ArtistData>::ListNode* artist;
     try {
-        artist = artists->find(artistKey);
+        artist = this->artists[hashResult].findByKey(artistID);
     }
-    catch (AVLtree<ArtistKey,ArtistData>::NotFound_AVLtree &notFoundAvLtree){
+    catch (List<int,ArtistData>::NotFound_List &notFoundInList){
         return FAILURE;
     }
-
-    //get the artist's data
-    MusicManager::ArtistData& data = artist->getData();
-
-    AVLtree<SongKey,int>::AVLNode* currentSongNode = data.getSongNodes()[data.getMaxSongID()];
-
-    if (currentSongNode == nullptr){    //if the artist's songs tree is empty
-        previousArtistSave = songPlays->getFirst()->getData().getMinID()->getPrevious();
-        if (artist->getKey().getArtistID() == songPlays->getFirst()->getData().getMinID()->getKey().getArtistID())
-            songPlays->getFirst()->getData().setMinID(previousArtistSave);      //update min_id if we remove the artist with the minimal id from the tree
-        songPlays->getFirst()->getData().getArtistTree()->erase(artistKey);
-        if ( songPlays->getFirst()->getData().getArtistTree()->getRoot() == nullptr){   //delete the 0 node from plays_list if its tree is empty now
-            songPlays->erase(songPlays->getFirst());
+    if(artist->getData().getMaxSong() != nullptr){
+        return FAILURE;
+    }
+    this->artists[hashResult].erase(artist);
+    this->artistsCounter--;
+    if(this->size != INITIAL_ARRAY_SIZE){
+        if(this->size / artistsCounter >= SHRINK_PROPORTION){
+            this->shrinkArtistsArraySize();
         }
     }
-    else {
-        int currentNumberOfPlays = -1;
-        while (currentSongNode != nullptr){
-            if (currentSongNode->getKey().getSongNumberOfPlays() != currentNumberOfPlays){
-                previousArtistSave = data.getPlaysNodes()[currentSongNode->getKey().getSongID()]->getData().getMinID()->getPrevious();
-                if (artist->getKey().getArtistID() == data.getPlaysNodes()[currentSongNode->getKey().getSongID()]->getData().getMinID()->getKey().getArtistID()){
-                    data.getPlaysNodes()[currentSongNode->getKey().getSongID()]->getData().setMinID(previousArtistSave);
-                }
-
-                data.getPlaysNodes()[currentSongNode->getKey().getSongID()]->getData().getArtistTree()->erase(artistKey);
-                // remove the playsNode if his artist Tree is empty
-                currentNumberOfPlays = data.getPlaysNodes()[currentSongNode->getKey().getSongID()]->getKey();
-                if (data.getPlaysNodes()[currentSongNode->getKey().getSongID()]->getData().getArtistTree()->getRoot() == nullptr){
-                    songPlays->erase(data.getPlaysNodes()[currentSongNode->getKey().getSongID()]);
-                }
-            }
-            currentSongNode = currentSongNode->getPrevious();
-            songCounter++;
-        }
-        if (songCounter!=artist->getData().getNumberOfSongs()){
-            previousArtistSave = songPlays->getFirst()->getData().getMinID()->getPrevious();
-            if (artist->getKey().getArtistID() == songPlays->getFirst()->getData().getMinID()->getKey().getArtistID()){
-                songPlays->getFirst()->getData().setMinID(previousArtistSave);
-            }
-            songPlays->getFirst()->getData().getArtistTree()->erase(artistKey);
-            if ( songPlays->getFirst()->getData().getArtistTree()->getRoot() == nullptr){
-                songPlays->erase(songPlays->getFirst());
-            }
-        }
-    }
-    //remove the artist from the main artists tree
-    songsCounter-=artist->getData().getNumberOfSongs();
-    artists->erase(artistKey);
-
     return SUCCESS;
 }
 

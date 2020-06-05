@@ -417,29 +417,11 @@ public:
         deleteTreePostorder(root);
     };
 
-    /*
-     * recursive version of AVLtree destructor
-     *
-    ~AVLtree(){
-        AVLNode* current = root;
-        if(current->rightSon == nullptr && current->leftSon == nullptr){
-            delete(current);
-        }
-        ~AVLtree(current->leftSon);
-        ~AVLtree(current->rightSon);
-    };
-    */
-
     AVLNode* getRoot() {
         return root;
     }
 
     AVLNode* insert(Key &key,Data &data){
-        /*
-        if (key==NULL){
-            throw BadParameters();
-        }
-        */
         if (root== nullptr){
             root=new AVLNode(key, data, nullptr, nullptr, nullptr, nullptr,
                              nullptr);
@@ -501,11 +483,6 @@ public:
     }
 
     void erase(Key &key){
-        /*
-        if (key==NULL){
-            throw BadParameters();
-        }
-        */
         AVLNode* current = root;
         AVLNode* connectionNode;
         while (current!= nullptr){
@@ -587,11 +564,6 @@ public:
     }
 
     AVLNode* find (Key &key){
-        /*
-        if (key==NULL){
-            throw BadParameters();
-        }
-        */
         AVLNode* current = root;
         while (current!= nullptr){
             if (current->key==key)

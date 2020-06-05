@@ -147,6 +147,7 @@ class MusicManager{
 
     // ---------- Properties ---------- //
     AVLRankTree<RankTreeSongKey,int>* songs; // actually there is no need for data in the songs rank tree, right?
+                        // we should save a pointer to the vertex of the song in one of the song trees in artist object
     List<int,ArtistData>* artists;
     int artistsCounter;
     int size;
@@ -155,6 +156,7 @@ class MusicManager{
 
     int hashFunction(int id, int modulo);
     void extendArtistsArraySize();
+    void shrinkArtistsArraySize();
 
     // ---------- public functions ---------- //
 
@@ -162,7 +164,7 @@ public:
 
     MusicManager();
     ~MusicManager();
-    StatusType addArtist(int artistID,int numOfSongs);
+    StatusType addArtist(int artistID);
     StatusType removeArtist(int artistID);
     StatusType AddSong(int artistID, int songID);
     StatusType RemoveSong(int artistID, int songID);

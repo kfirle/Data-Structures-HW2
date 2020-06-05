@@ -10,17 +10,6 @@ using std::exception;
 using std::cout;
 using std::endl;
 
-class NotFound : public exception{};
-class BadParameters : public exception{};
-
-
-/*template<class T>
-struct node {
-
-    node<T>* next;
-    T data;
-};
-*/
 
 template <class Key, class Data>
 class List {
@@ -98,11 +87,6 @@ class List {
     }
 
     ListNode *insertFirst(Key &key, Data &data) {
-        /*
-        if (key == NULL || data == NULL) {
-            throw BadParameters();
-        }
-        */
         ListNode *new_element = new ListNode(key, data, first, nullptr);
         if (this->first == NULL) {                    // The list is empty
             first = new_element;
@@ -111,7 +95,6 @@ class List {
             if (last == first) {               // The list has one element
                 last->previous = new_element;
             } else {                        // The list has more than one element
-                //ListNode *tmp = first;
                 first->previous = new_element;
             }
             first = new_element;
@@ -119,12 +102,24 @@ class List {
         return new_element;
     }
 
-    ListNode *insertAfterNode(Key &key, Data &data, ListNode* element) {
-        /*
-        if (key == NULL || data == NULL || element == nullptr) {
-            throw BadParameters();
+    ListNode *insertFirst(ListNode* element) {
+        element->previous = nullptr;
+        element->next = this->first;
+        if (this->first == NULL) {                    // The list is empty
+            first = element;
+            last = first;
+        } else {
+            if (last == first) {               // The list has one element
+                last->previous = element;
+            } else {                        // The list has more than one element
+                first->previous = element;
+            }
+            first = element;
         }
-        */
+        return element;
+    }
+
+    ListNode *insertAfterNode(Key &key, Data &data, ListNode* element) {
         ListNode *temp = element->next;
         ListNode *new_element = new ListNode(key, data, temp, element);
         element->next = new_element;
@@ -137,11 +132,6 @@ class List {
     }
 
     ListNode *findByKey(Key &key) {
-        /*
-        if (key == NULL) {
-            throw BadParameters();
-        }
-        */
         ListNode *i = first;
         while (i != nullptr) {
             if (i->key == key) {
@@ -149,15 +139,21 @@ class List {
             }
             i = i->next;
         }
-        throw NotFound();
+        throw NotFound_List();
+    }
+
+    bool checkIfExist(Key &key) {
+        ListNode *i = first;
+        while (i != nullptr) {
+            if (i->key == key) {
+                return true;
+            }
+            i = i->next;
+        }
+        return false;
     }
 
     void erase(ListNode* element) {
-        /*
-        if (element == NULL) {
-            throw BadParameters();
-        }
-        */
         if(element == first && element == last){        // The list has one element
             first= nullptr;
             last = nullptr;
@@ -181,6 +177,26 @@ class List {
         delete element;
     }
 
+    void removeFromList(ListNode* element) {
+        if(element == first && element == last){        // The list has one element
+            first= nullptr;
+            last = nullptr;
+            return;
+        }
+        if(element == first){
+            first = element->next;
+            first->previous = nullptr;
+            return;
+        }
+        if(element == last){
+            last = element->previous;
+            last->next = nullptr;
+            return;
+        }
+        element->previous->next = element->next;
+        element->next->previous = element->previous;;
+    }
+
     ListNode& removeFirst(){
         ListNode* first = this->getFirst();
         first->getNext()->previous = nullptr;
@@ -202,6 +218,7 @@ class List {
         cout << i->key << endl;
     }
 
+    class NotFound_List : public exception{};
 };
 
 
