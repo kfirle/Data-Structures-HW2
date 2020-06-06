@@ -151,6 +151,7 @@ class MusicManager{
     AVLRankTree<RankTreeSongKey,int>* songs;
     List<int,ArtistData>* artists;
     int artistsCounter;
+    int songsCounter;
     int size;
 
     // ---------- private functions ---------- //

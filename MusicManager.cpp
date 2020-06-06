@@ -160,6 +160,7 @@ MusicManager::MusicManager() {
     songs = new AVLRankTree<RankTreeSongKey,int>();
     artists = new List<int,ArtistData>[INITIAL_ARRAY_SIZE];
     artistsCounter = 0;
+    songsCounter = 0;
     size = INITIAL_ARRAY_SIZE;
 }
 
@@ -238,6 +239,7 @@ StatusType MusicManager::AddSong(int artistID, int songID) {
         // inserting the new song to the rank tree of all the songs
         RankTreeSongKey songRankTreeKey(songID,INITIAL_PLAYS_NUMBER,artistID);
         songs->insert(songRankTreeKey,artistID);
+        this->songsCounter++;
         return SUCCESS;
     }
     return FAILURE;
@@ -267,6 +269,7 @@ StatusType MusicManager::RemoveSong(int artistID, int songID){
     ArtistSongsTreeByIdAndPlaysSongKey key(songID,num_of_plays);
     artist->getData().getSongsTreeOrderedByPlaysAndId()->erase(key);
     artist->getData().getSongsTreeOrderedById()->erase(songID);
+    this->songsCounter--;
     return SUCCESS;
 }
 
@@ -328,7 +331,7 @@ StatusType MusicManager::GetArtistBestSong(int artistID, int* songID){
 }
 
 StatusType MusicManager::GetRecommendedSongInPlace(int rank, int *artistID, int *songID) {
-    if (artistsCounter<rank)
+    if (songsCounter<rank)
         return FAILURE;
     AVLRankTree<RankTreeSongKey,int>::AVLNode* songInRank = songs->select(rank);
     *artistID = songInRank->getKey().getSongArtistID();
