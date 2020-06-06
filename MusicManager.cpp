@@ -5,6 +5,7 @@
 #define INVALID_INDEX -1
 #define INITIAL_ARRAY_SIZE 10
 #define SHRINK_PROPORTION 20
+#define INITIAL_PLAYS_NUMBER 0
 #include "MusicManager.h"
 
 // ---------- RankTreeSongKey implementation ---------- //
@@ -220,17 +221,22 @@ StatusType MusicManager::AddSong(int artistID, int songID) {
         // inserting the new song to the trees of the artist
         ArtistSongsTreeByIdSongData songByIdData;
         AVLtree<int,ArtistSongsTreeByIdSongData>::AVLNode* songByIdNode = artist->getData().getSongsTreeOrderedById()->insert(songID,songByIdData);
-        ArtistSongsTreeByIdAndPlaysSongKey songByIdAndPlaysKey(songID,0);
+        ArtistSongsTreeByIdAndPlaysSongKey songByIdAndPlaysKey(songID,INITIAL_PLAYS_NUMBER);
         ArtistSongsTreeByIdAndPlaysSongData songByIdAndPlaysData;
         AVLtree<ArtistSongsTreeByIdAndPlaysSongKey,ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* songByIdAndPlaysNode = artist->getData().getSongsTreeOrderedByPlaysAndId()->insert(songByIdAndPlaysKey,songByIdAndPlaysData);
         songByIdNode->getData().setSongInSongsByIdTree(*songByIdAndPlaysNode);
         songByIdAndPlaysNode->getData().setSongInSongsByIdTree(*songByIdNode);
-        if (artist->getData().getMaxSong()->getKey().getSongNumberOfPlays()<songByIdAndPlaysNode->getKey().getSongNumberOfPlays()
-            || (artist->getData().getMaxSong()->getKey().getSongNumberOfPlays()==songByIdAndPlaysNode->getKey().getSongNumberOfPlays()
-            && artist->getData().getMaxSong()->getKey().getSongID()>songByIdAndPlaysNode->getKey().getSongID()))
+        if(artist->getData().getMaxSong() == nullptr){
             artist->getData().setMaxSong(*songByIdAndPlaysNode);
+        }
+        else{
+            if (artist->getData().getMaxSong()->getKey().getSongNumberOfPlays()<songByIdAndPlaysNode->getKey().getSongNumberOfPlays()
+                || (artist->getData().getMaxSong()->getKey().getSongNumberOfPlays()==songByIdAndPlaysNode->getKey().getSongNumberOfPlays()
+                    && artist->getData().getMaxSong()->getKey().getSongID()>songByIdAndPlaysNode->getKey().getSongID()))
+                artist->getData().setMaxSong(*songByIdAndPlaysNode);
+        }
         // inserting the new song to the rank tree of all the songs
-        RankTreeSongKey songRankTreeKey(songID,0,artistID);
+        RankTreeSongKey songRankTreeKey(songID,INITIAL_PLAYS_NUMBER,artistID);
         songs->insert(songRankTreeKey,artistID);
         return SUCCESS;
     }
