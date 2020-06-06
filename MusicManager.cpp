@@ -323,7 +323,7 @@ StatusType MusicManager::GetArtistBestSong(int artistID, int* songID){
         return FAILURE;
         //The artist doesn't have songs
     }
-    *songID = max_song->getKey().getSongNumberOfPlays();
+    *songID = max_song->getKey().getSongID();
     return SUCCESS;
 }
 
