@@ -237,6 +237,33 @@ StatusType MusicManager::AddSong(int artistID, int songID) {
     return FAILURE;
 }
 
+StatusType MusicManager::RemoveSong(int artistID, int songID){
+    int hashResult = hashFunction(artistID,this->size);
+    List<int,ArtistData>::ListNode* artist;
+    try {
+        artist = this->artists[hashResult].findByKey(artistID);
+    }
+    catch (List<int,ArtistData>::NotFound_List &notFoundInList){
+        return FAILURE;
+        //The artist doesn't exist in the system
+    }
+    AVLtree<int, MusicManager::ArtistSongsTreeByIdSongData>::AVLNode* song;
+    try {
+        song = artist->getData().getSongsTreeOrderedById()->find(songID);
+    }
+    catch (AVLtree<int,ArtistSongsTreeByIdSongData>::NotFound_AVLtree &NotFound_AVLtree){
+        return FAILURE;
+        //The song doesn't exist in the system
+    }
+    int num_of_plays = song->getData().getSongInSongsByIdAndPlaysTree()->getKey().getSongNumberOfPlays();
+    MusicManager::RankTreeSongKey RankTreeSongKey(songID,num_of_plays,artistID);
+    this->songs->erase(RankTreeSongKey);
+    ArtistSongsTreeByIdAndPlaysSongKey key(songID,num_of_plays);
+    artist->getData().getSongsTreeOrderedByPlaysAndId()->erase(key);
+    artist->getData().getSongsTreeOrderedById()->erase(songID);
+    return SUCCESS;
+}
+
 StatusType MusicManager::AddToSongCount(int artistID, int songID, int count) {
     int hashResult = hashFunction(artistID,this->size);
     List<int,ArtistData>::ListNode* artist;
@@ -272,6 +299,25 @@ StatusType MusicManager::AddToSongCount(int artistID, int songID, int count) {
     RankTreeSongKey newSongRankTreeKey(songID,songNumberOfPlays+count,artistID);
     songs->erase(songRankTreeKey);
     songs->insert(newSongRankTreeKey,artistID);
+    return SUCCESS;
+}
+
+StatusType MusicManager::GetArtistBestSong(int artistID, int* songID){
+    int hashResult = hashFunction(artistID,this->size);
+    List<int,ArtistData>::ListNode* artist;
+    try {
+        artist = this->artists[hashResult].findByKey(artistID);
+    }
+    catch (List<int,ArtistData>::NotFound_List &notFoundInList){
+        return FAILURE;
+        //The artist doesn't exist in the system
+    }
+    AVLtree<MusicManager::ArtistSongsTreeByIdAndPlaysSongKey,MusicManager::ArtistSongsTreeByIdAndPlaysSongData>::AVLNode* max_song = artist->getData().getMaxSong();
+    if(max_song == nullptr){
+        return FAILURE;
+        //The artist doesn't have songs
+    }
+    *songID = max_song->getKey().getSongNumberOfPlays();
     return SUCCESS;
 }
 
