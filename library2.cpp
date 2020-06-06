@@ -2,7 +2,7 @@
 // Created by Dell on 11/05/2020.
 //
 
-#include "library1.h"
+#include "library2.h"
 #include "MusicManager.h"
 
 void *Init(){
@@ -39,8 +39,8 @@ StatusType RemoveArtist(void *DS, int artistID){
 }
 
 StatusType AddSong(void *DS, int artistID, int songID){
-    if (DS == NULL || artistID <= 0 || songID < 0)
-        return FAILURE;
+    if (DS == NULL || artistID <= 0 || songID <= 0)
+        return INVALID_INPUT;
     try {
         return ((MusicManager *)DS)->AddSong(artistID,songID);
     }
@@ -50,14 +50,21 @@ StatusType AddSong(void *DS, int artistID, int songID){
 }
 
 StatusType RemoveSong(void *DS, int artistID, int songID){
-
+    if (DS == NULL || artistID <= 0 || songID <= 0)
+        return INVALID_INPUT;
+    try {
+        return ((MusicManager *)DS)->RemoveSong(artistID,songID);
+    }
+    catch (std::bad_alloc &badAlloc) {
+        return ALLOCATION_ERROR;
+    }
 }
 
 StatusType AddToSongCount(void *DS, int artistID, int songID, int count){
     if (DS == NULL || artistID <= 0 || songID < 0 || count <= 0)
         return INVALID_INPUT;
     try {
-        return ((MusicManager *)DS)->addToSongCount(artistID,songID,count);
+        return ((MusicManager *)DS)->AddToSongCount(artistID,songID,count);
     }
     catch (std::bad_alloc &badAlloc){
         return ALLOCATION_ERROR;
@@ -65,7 +72,14 @@ StatusType AddToSongCount(void *DS, int artistID, int songID, int count){
 }
 
 StatusType GetArtistBestSong(void *DS, int artistID, int *songId){
-
+    if (DS == NULL || artistID <= 0 || songId == NULL)
+        return INVALID_INPUT;
+    try {
+        return ((MusicManager *)DS)->GetArtistBestSong(artistID, songId);
+    }
+    catch (std::bad_alloc &badAlloc){
+        return ALLOCATION_ERROR;
+    }
 }
 
 StatusType GetRecommendedSongInPlace(void *DS, int rank, int *artistId, int *songId){
