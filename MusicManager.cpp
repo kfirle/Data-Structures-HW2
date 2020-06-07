@@ -125,7 +125,7 @@ void MusicManager::extendArtistsArraySize(){
         List<int,ArtistData>::ListNode* current = artists[i].getFirst();
         while(current != nullptr){
             List<int,ArtistData>::ListNode* next = current->getNext();
-            this->artists->removeFromList(current);
+            this->artists[i].removeFromList(current);
             int hashResult = hashFunction(current->getKey(),newSize);
             newArtists[hashResult].insertFirst(current);
             current = next;
@@ -143,7 +143,7 @@ void MusicManager::shrinkArtistsArraySize(){
         List<int,ArtistData>::ListNode* current = artists[i].getFirst();
         while(current != nullptr){
             List<int,ArtistData>::ListNode* next = current->getNext();
-            this->artists->removeFromList(current);
+            this->artists[i].removeFromList(current);
             int hashResult = hashFunction(current->getKey(),newSize);
             newArtists[hashResult].insertFirst(current);
             current = next;
