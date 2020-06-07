@@ -160,6 +160,7 @@ private:
             else return findByRank(index-root->leftSon->subTreeSize-1,root->rightSon);
         }
         if (index==1) return root;
+        return findByRank(index-1,root->rightSon);
     }
 
     void roll (AVLNode* startNode){

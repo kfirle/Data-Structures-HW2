@@ -264,8 +264,13 @@ StatusType MusicManager::RemoveSong(int artistID, int songID){
         //The song doesn't exist in the system
     }
     int num_of_plays = song->getData().getSongInSongsByIdAndPlaysTree()->getKey().getSongNumberOfPlays();
+    // removing the song from the songs rank tree
     MusicManager::RankTreeSongKey RankTreeSongKey(songID,num_of_plays,artistID);
     this->songs->erase(RankTreeSongKey);
+    // updating maxSong in the songs tree of the artist that is ordered by the id and the number of plays
+    if (artist->getData().getMaxSong()->getKey().getSongID()==songID)
+        artist->getData().setMaxSong(*artist->getData().getMaxSong()->getPrevious());
+    // removing the song from the songs trees of the artist
     ArtistSongsTreeByIdAndPlaysSongKey key(songID,num_of_plays);
     artist->getData().getSongsTreeOrderedByPlaysAndId()->erase(key);
     artist->getData().getSongsTreeOrderedById()->erase(songID);
