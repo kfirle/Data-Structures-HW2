@@ -333,7 +333,7 @@ StatusType MusicManager::GetArtistBestSong(int artistID, int* songID){
 StatusType MusicManager::GetRecommendedSongInPlace(int rank, int *artistID, int *songID) {
     if (songsCounter<rank)
         return FAILURE;
-    AVLRankTree<RankTreeSongKey,int>::AVLNode* songInRank = songs->select(rank);
+    AVLRankTree<RankTreeSongKey,int>::AVLNode* songInRank = songs->select(songsCounter-rank+1);
     *artistID = songInRank->getKey().getSongArtistID();
     *songID = songInRank->getKey().getSongID();
     return SUCCESS;
